@@ -4,10 +4,14 @@ mod hex_to_base64;
 mod fixed_xor;
 // Challenge 3
 mod decrypt_xor_char;
+// Challenge 4
+mod detect_char_xor;
 
 use self::hex_to_base64::hex_to_base64 as hex_to_base64;
 use self::fixed_xor::fixed_xor as fixed_xor;
 use self::decrypt_xor_char::decrypt_xor_char as decrypt_xor_char;
+use self::detect_char_xor::detect_char_xor as detect_char_xor;
+use self::decrypt_xor_char::Decrypted;
 
 pub fn set_1() {
     println!("");
@@ -27,8 +31,13 @@ pub fn set_1() {
     println!("");
 
     println!("Exercise 3: Single-byte XOR cipher (http://cryptopals.com/sets/1/challenges/3/)");
-    let result_3 = decrypt_xor_char("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736");
+    let result_3: Decrypted = decrypt_xor_char("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736");
     println!("Result >>> {}", result_3);
+    println!("");
+
+    println!("Exercise 4: Detect single-character XOR (http://cryptopals.com/sets/1/challenges/4/)");
+    let result_4: Decrypted = detect_char_xor("src/assets/data.txt");
+    println!("Result >>> {}", result_4);
     println!("");
 
 }

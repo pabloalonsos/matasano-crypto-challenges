@@ -5,9 +5,9 @@ use self::serialize::hex::FromHex;
 
 #[derive(Debug)]
 pub struct Decrypted {
-    key: char,
-    score: u8,
-    decrypted: String
+    pub key: char,
+    pub score: u8,
+    pub decrypted: String
 }
 impl fmt::Display for Decrypted {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -15,10 +15,10 @@ impl fmt::Display for Decrypted {
     }
 }
 
-pub fn decrypt_xor_char(hex_input: &str) -> String {
+pub fn decrypt_xor_char(hex_input: &str) -> Decrypted {
 
     let hex_string = hex_input.from_hex().unwrap();
-    let common_chars = "etaonrishdlfcmugypwbvkjxqz".to_string().into_bytes();
+    let common_chars = "etaonrishdlfcmugypbvkjxqz".to_string().into_bytes();
 
     let mut result_vector: Vec<Decrypted> = Vec::new();
     for i in 0..255 {
@@ -36,23 +36,31 @@ pub fn decrypt_xor_char(hex_input: &str) -> String {
                 decrypted_char
             })
             .collect();
-
         match String::from_utf8(decrypted){
             Ok(result) => {
                 result_vector.push(
                     Decrypted {
                         key: xor_key as char,
-                        score: score,
+                        score: score as u8,
                         decrypted: result
                     }
                 );
             },
-            Err(err) => {}
+            Err(_) => ()
         }
     }
 
     result_vector.sort_by(| a, b | a.score.cmp(&b.score));
 
-    result_vector.last().unwrap().to_string()
+    let result: Decrypted = match result_vector.last() {
+        Some(value) => Decrypted {key: value.key, score: value.score, decrypted: value.decrypted.clone()},
+        None => Decrypted {key: 'A', score: 0, decrypted: "".to_string()}
+    };
+
+    Decrypted {
+        key: result.key,
+        score: result.score,
+        decrypted: result.decrypted.clone()
+    }
 
 }
