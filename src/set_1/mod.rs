@@ -6,11 +6,15 @@ mod fixed_xor;
 mod decrypt_xor_char;
 // Challenge 4
 mod detect_char_xor;
+// Challenge 5
+mod repeating_key_xor;
 
 use self::hex_to_base64::hex_to_base64 as hex_to_base64;
 use self::fixed_xor::fixed_xor as fixed_xor;
 use self::decrypt_xor_char::decrypt_xor_char as decrypt_xor_char;
 use self::detect_char_xor::detect_char_xor as detect_char_xor;
+use self::repeating_key_xor::repeating_key_xor as repeating_key_xor;
+
 use self::decrypt_xor_char::Decrypted;
 
 pub fn set_1() {
@@ -24,9 +28,9 @@ pub fn set_1() {
     println!("");
 
     println!("Exercise 2: Fixed XOR (http://cryptopals.com/sets/1/challenges/2/)");
-    let input_1 = "1c0111001f010100061a024b53535009181c";
-    let input_2 = "686974207468652062756c6c277320657965";
-    let result_2 = fixed_xor(input_1, input_2);
+    let input_2_1 = "1c0111001f010100061a024b53535009181c";
+    let input_2_2 = "686974207468652062756c6c277320657965";
+    let result_2 = fixed_xor(input_2_1, input_2_2);
     println!("Result >>> {}", result_2);
     println!("");
 
@@ -40,4 +44,9 @@ pub fn set_1() {
     println!("Result >>> {}", result_4);
     println!("");
 
+    println!("Exercise 5: Implementing Repeat-key XOR (http://cryptopals.com/sets/1/challenges/5/)");
+    let input_5 = "Burning 'em, if you ain't quick and nimble I go crazy when I hear a cymbal";
+    let result_5 = repeating_key_xor(input_5);
+    println!("Result >>> {:?}", result_5);
+    println!("");
 }
