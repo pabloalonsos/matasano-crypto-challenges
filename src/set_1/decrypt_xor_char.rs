@@ -18,7 +18,7 @@ impl fmt::Display for Decrypted {
 pub fn decrypt_xor_char(hex_input: &str) -> Decrypted {
 
     let hex_string = hex_input.from_hex().unwrap();
-    let common_chars = "etaonrishdlfcmugypbvkjxqz".to_string().into_bytes();
+    let common_chars = "e taonrishdlfcmugypbvkjxqz".to_string().into_bytes();
 
     let mut result_vector: Vec<Decrypted> = Vec::new();
     for i in 0..255 {

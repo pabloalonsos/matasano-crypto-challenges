@@ -8,12 +8,15 @@ mod decrypt_xor_char;
 mod detect_char_xor;
 // Challenge 5
 mod repeating_key_xor;
+// Challenge 6
+mod break_repeating_key_xor;
 
 use self::hex_to_base64::hex_to_base64 as hex_to_base64;
 use self::fixed_xor::fixed_xor as fixed_xor;
 use self::decrypt_xor_char::decrypt_xor_char as decrypt_xor_char;
 use self::detect_char_xor::detect_char_xor as detect_char_xor;
 use self::repeating_key_xor::repeating_key_xor as repeating_key_xor;
+use self::break_repeating_key_xor::break_repeating_key_xor as break_repeating_key_xor;
 
 use self::decrypt_xor_char::Decrypted;
 
@@ -44,9 +47,15 @@ pub fn set_1() {
     println!("Result >>> {}", result_4);
     println!("");
 
-    println!("Exercise 5: Implementing Repeat-key XOR (http://cryptopals.com/sets/1/challenges/5/)");
+    println!("Exercise 5: Implementing Repeating-key XOR (http://cryptopals.com/sets/1/challenges/5/)");
     let input_5 = "Burning 'em, if you ain't quick and nimble I go crazy when I hear a cymbal";
-    let result_5 = repeating_key_xor(input_5);
+    let key_5 = "ICE";
+    let result_5 = repeating_key_xor(input_5, key_5);
     println!("Result >>> {:?}", result_5);
+    println!("");
+
+    println!("Exercise 6: Break Repeating-key XOR (http://cryptopals.com/sets/1/challenges/6/)");
+    let result_6 = break_repeating_key_xor("src/assets/data_1_6.txt");
+    println!("Result >>> {:?}", result_6);
     println!("");
 }
