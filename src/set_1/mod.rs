@@ -18,7 +18,7 @@ use self::detect_char_xor::detect_char_xor as detect_char_xor;
 use self::repeating_key_xor::repeating_key_xor as repeating_key_xor;
 use self::break_repeating_key_xor::break_repeating_key_xor as break_repeating_key_xor;
 
-use self::decrypt_xor_char::Decrypted;
+use super::utils::crypto_data::CryptoData;
 
 pub fn set_1() {
     println!("");
@@ -26,7 +26,8 @@ pub fn set_1() {
     println!("");
 
     println!("Exercise 1: Convert HEX to Base64 (http://cryptopals.com/sets/1/challenges/1/)");
-    let result_1 = hex_to_base64("49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d");
+    let input_1 = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
+    let result_1 = hex_to_base64(input_1);
     println!("Result >>> {}", result_1);
     println!("");
 
@@ -38,24 +39,24 @@ pub fn set_1() {
     println!("");
 
     println!("Exercise 3: Single-byte XOR cipher (http://cryptopals.com/sets/1/challenges/3/)");
-    let result_3: Decrypted = decrypt_xor_char("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736");
-    println!("Result >>> {}", result_3);
+    let (score_3, key_3, decrypted_text_3): (i32, CryptoData, CryptoData) = decrypt_xor_char("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736");
+    println!("Result >>> Score: {}; Key: '{}'; Decrypted: {}", score_3, key_3, decrypted_text_3);
     println!("");
 
     println!("Exercise 4: Detect single-character XOR (http://cryptopals.com/sets/1/challenges/4/)");
-    let result_4: Decrypted = detect_char_xor("src/assets/data.txt");
-    println!("Result >>> {}", result_4);
+    let (score_4, key_4, decrypted_text_4): (i32, CryptoData, CryptoData) = detect_char_xor("./assets/4.txt");
+    println!("Result >>> Score: {}; Key: '{}'; Decrypted: {}", score_4, key_4, decrypted_text_4);
     println!("");
 
     println!("Exercise 5: Implementing Repeating-key XOR (http://cryptopals.com/sets/1/challenges/5/)");
     let input_5 = "Burning 'em, if you ain't quick and nimble I go crazy when I hear a cymbal";
     let key_5 = "ICE";
-    let result_5 = repeating_key_xor(input_5, key_5);
-    println!("Result >>> {:?}", result_5);
+    let result_5: CryptoData = repeating_key_xor(input_5, key_5);
+    println!("Result >>> {}", result_5);
     println!("");
 
     println!("Exercise 6: Break Repeating-key XOR (http://cryptopals.com/sets/1/challenges/6/)");
-    let result_6 = break_repeating_key_xor("src/assets/data_1_6.txt");
-    println!("Result >>> {:?}", result_6);
+    let result_6: CryptoData = break_repeating_key_xor("./assets/6.txt");
+    println!("Result >>> {}", result_6);
     println!("");
 }
