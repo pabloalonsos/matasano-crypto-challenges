@@ -1,7 +1,6 @@
 extern crate rustc_serialize as serialize;
 
-
-use self::serialize::base64::{STANDARD, ToBase64};
+use self::serialize::base64::{ToBase64};
 use self::serialize::hex::FromHex;
 
 use super::super::utils::crypto_data::CryptoData;

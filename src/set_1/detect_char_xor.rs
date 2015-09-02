@@ -3,7 +3,6 @@ use std::io::prelude::*;
 use std::fs::File;
 use std::path::Path;
 
-use super::decrypt_xor_char::decrypt_xor_char as decrypt_xor_char;
 use super::super::utils::crypto_data::CryptoData;
 
 pub fn detect_char_xor (data_file: &str) -> (i32, CryptoData, CryptoData) {

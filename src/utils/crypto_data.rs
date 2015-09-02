@@ -1,7 +1,10 @@
 extern crate rustc_serialize as serialize;
+extern crate openssl;
 
 use std::fmt;
 use std::ops::BitXor;
+use self::openssl::crypto::symm::decrypt;
+use self::openssl::crypto::symm::Type::AES_128_ECB;
 use self::serialize::hex::{ToHex, FromHex};
 use self::serialize::base64::{STANDARD, ToBase64, FromBase64};
 
@@ -218,6 +221,13 @@ impl CryptoData {
             });
 
         keysize
+    }
+
+    pub fn aes_128_ecb(&self, key: &str) -> CryptoData {
+        let key_bytes = key.as_bytes();
+        let iv = Vec::new();
+        let test: Vec<u8> = decrypt(AES_128_ECB, key_bytes, iv, &self.to_vec()[..]);
+        CryptoData::new_from_vec(test)
     }
 
 }

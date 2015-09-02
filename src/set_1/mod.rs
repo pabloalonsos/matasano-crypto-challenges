@@ -10,6 +10,9 @@ mod detect_char_xor;
 mod repeating_key_xor;
 // Challenge 6
 mod break_repeating_key_xor;
+// Challenge 7
+mod aes_ecb_mode;
+
 
 use self::hex_to_base64::hex_to_base64 as hex_to_base64;
 use self::fixed_xor::fixed_xor as fixed_xor;
@@ -17,6 +20,7 @@ use self::decrypt_xor_char::decrypt_xor_char as decrypt_xor_char;
 use self::detect_char_xor::detect_char_xor as detect_char_xor;
 use self::repeating_key_xor::repeating_key_xor as repeating_key_xor;
 use self::break_repeating_key_xor::break_repeating_key_xor as break_repeating_key_xor;
+use self::aes_ecb_mode::aes_ecb_mode as aes_ecb_mode;
 
 use super::utils::crypto_data::CryptoData;
 
@@ -58,5 +62,10 @@ pub fn set_1() {
     println!("Exercise 6: Break Repeating-key XOR (http://cryptopals.com/sets/1/challenges/6/)");
     let result_6: CryptoData = break_repeating_key_xor("./assets/6.txt");
     println!("Result >>> {}", result_6);
+    println!("");
+
+    println!("Exercise 7: AES in ECB mode (http://cryptopals.com/sets/1/challenges/7/)");
+    let result_7: CryptoData = aes_ecb_mode("./assets/7.txt");
+    println!("Result >>> {}", result_7);
     println!("");
 }
