@@ -230,4 +230,16 @@ impl CryptoData {
         CryptoData::new_from_vec(test)
     }
 
+    pub fn padding(&self, length: u8) -> CryptoData {
+        let mut input: Vec<u8> = self.to_vec();
+        if length < input.len() as u8 {
+            self.clone()
+        } else {
+            let padding = length - input.len() as u8;
+            for _ in 0..padding {
+                input.push(padding);
+            }
+            CryptoData::new_from_vec(input)
+        }
+    }
 }

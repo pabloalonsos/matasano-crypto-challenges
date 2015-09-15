@@ -27,10 +27,6 @@ use self::detect_aes_ecb::detect_aes_ecb as detect_aes_ecb;
 use super::utils::crypto_data::CryptoData;
 
 pub fn set_1() {
-    println!("");
-    println!("Set 1:");
-    println!("");
-
     println!("Exercise 1: Convert HEX to Base64 (http://cryptopals.com/sets/1/challenges/1/)");
     let input_1 = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
     let result_1 = hex_to_base64(input_1);
