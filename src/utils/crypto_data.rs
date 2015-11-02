@@ -3,8 +3,9 @@ extern crate openssl;
 
 use std::fmt;
 use std::ops::BitXor;
-use self::openssl::crypto::symm::decrypt;
+use self::openssl::crypto::symm::{Crypter, encrypt};
 use self::openssl::crypto::symm::Type::AES_128_ECB;
+use self::openssl::crypto::symm::Mode::Decrypt;
 use self::serialize::hex::{ToHex, FromHex};
 use self::serialize::base64::{STANDARD, ToBase64, FromBase64};
 
@@ -88,6 +89,15 @@ impl CryptoData {
         )
     }
 
+    pub fn concat(&self, other: CryptoData) -> CryptoData {
+        let second: Vec<u8> = other.to_vec();
+        let mut result: Vec<u8> = self.to_vec();
+        for pos in 0..second.len() {
+            result.push(second[pos] as u8);
+        }
+        CryptoData::new_from_vec(result)
+    }
+
     pub fn to_vec(&self) -> Vec<u8> {
         self.data.clone()
     }
@@ -125,7 +135,6 @@ impl CryptoData {
         )
     }
 
-
     pub fn to_hex(&self) -> CryptoData {
         CryptoData::new_from_str(
             &self
@@ -143,6 +152,13 @@ impl CryptoData {
             }
         }
         CryptoData::new_from_vec(result)
+    }
+
+    pub fn strip_padding(&self) -> CryptoData {
+        let mut no_pad = self
+            .to_vec();
+        no_pad.truncate(16);
+        CryptoData::new_from_vec(no_pad)
     }
 
     pub fn score(&self) -> i32 {
@@ -223,11 +239,30 @@ impl CryptoData {
         keysize
     }
 
-    pub fn aes_128_ecb(&self, key: &str) -> CryptoData {
+    pub fn aes_128_ecb_decrypt(&self, key: &str) -> CryptoData {
+
+        let decrypter: Crypter = Crypter::new(AES_128_ECB);
+        decrypter.init(Decrypt, key.as_bytes(), vec![0, 16]);
+        decrypter.pad(false);
+        let decrypted: Vec<u8> = decrypter.update(&self.to_vec());
+
+        /*
+         * There seems to be a bug in the decrypt method in the library that returns empty vectors
+         * more info: https://github.com/sfackler/rust-openssl/issues/40
+         *
+          let key_bytes = key.as_bytes();
+          let decrypted_vec: Vec<u8> = decrypt(AES_128_ECB, &key_bytes, vec![0, 16], &(self.to_vec()));
+          CryptoData::new_from_vec(decrypted_vec)
+        */
+
+        CryptoData::new_from_vec(decrypted)
+
+    }
+
+    pub fn aes_128_ecb_encrypt(&self, key: &str) -> CryptoData {
         let key_bytes = key.as_bytes();
-        let iv = Vec::new();
-        let test: Vec<u8> = decrypt(AES_128_ECB, key_bytes, iv, &self.to_vec()[..]);
-        CryptoData::new_from_vec(test)
+        let encrypted_vec: Vec<u8> = encrypt(AES_128_ECB, &key_bytes, vec![0, 16], &(self.to_vec()));
+        CryptoData::new_from_vec(encrypted_vec)
     }
 
     pub fn padding(&self, length: u8) -> CryptoData {
@@ -241,5 +276,39 @@ impl CryptoData {
             }
             CryptoData::new_from_vec(input)
         }
+    }
+
+    pub fn encrypt_aes_128_cbc(&self, key: &str, iv: CryptoData) -> CryptoData {
+
+        let (_, cypher_text): (CryptoData, CryptoData) = self.to_vec()
+            .chunks(16)
+            .fold((iv, CryptoData::new()), | acc, block | {
+                let ( crypto_vec, result ) = acc;
+                let crypto_block = CryptoData::new_from_vec(block.to_vec());
+                let xored_block = crypto_block.xor(crypto_vec);
+                let encrypted_block = xored_block.aes_128_ecb_encrypt(key);
+
+                (encrypted_block.clone(), result.concat(encrypted_block.strip_padding()))
+            });
+
+        cypher_text
+
+    }
+
+    pub fn decrypt_aes_128_cbc(&self, key: &str, iv: CryptoData) -> CryptoData {
+
+        let (_, plain_text): (CryptoData, CryptoData) = self.to_vec()
+            .chunks(16)
+            .fold((iv, CryptoData::new()), | acc, block | {
+                let ( crypto_vec, result ) = acc;
+                let encrypted_block = CryptoData::new_from_vec(block.to_vec());
+                let crypto_block = encrypted_block.aes_128_ecb_decrypt(key);
+                let decrypted_block = crypto_block.xor(crypto_vec);
+
+                (encrypted_block.clone(), result.concat(decrypted_block.strip_padding()))
+            });
+
+        plain_text
+
     }
 }

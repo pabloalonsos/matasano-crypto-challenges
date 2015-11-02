@@ -29,8 +29,19 @@ pub fn detect_aes_ecb(data_file: &str) -> CryptoData {
             if !cypher_map.contains_key(chunk) {
                 cypher_map.insert(chunk, 0);
             } else {
-                let current_val = cypher_map.remove(chunk).unwrap();
-                cypher_map.insert(chunk, current_val + 1);
+                match cypher_map.get_mut(chunk) {
+                    Some(count) => { *count += 1; },
+                    None => {}
+                }
+
+                // Option 2
+                //let current_val = cypher_map.remove(chunk).unwrap();
+                //cypher_map.insert(chunk, current_val + 1);
+
+                // Option 3
+                // if let Some(count) = cypher_map.get_mut(chunk) {
+                //     *count += 1;
+                // }
             }
         }
 
