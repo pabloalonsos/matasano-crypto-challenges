@@ -21,9 +21,9 @@ pub fn cbc_mode(data_file: &str, input_key: &str) -> CryptoData {
 
     let iv: CryptoData = CryptoData::new_from_vec(vec![0; 16]); // 16 zeroes as Initialization Vector
 
-    let decrypted_content = crypto_contents.from_base64().decrypt_aes_128_cbc(input_key, iv.clone());
+    let decrypted_content = crypto_contents.from_base64().decrypt_aes_128_cbc(input_key.as_bytes().to_vec(), iv.clone());
 
-    let _ = decrypted_content.encrypt_aes_128_cbc(input_key, iv.clone()); // left here for reference for encryption
+    let _ = decrypted_content.encrypt_aes_128_cbc(input_key.as_bytes().to_vec(), iv.clone()); // left here for reference for encryption
 
     decrypted_content
 

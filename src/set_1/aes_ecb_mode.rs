@@ -19,5 +19,5 @@ pub fn aes_ecb_mode(data_file: &str) -> CryptoData {
 
     let contents: CryptoData = CryptoData::new_from_str(&base64_contents).from_base64();
 
-    contents.aes_128_ecb_decrypt("YELLOW SUBMARINE")
+    contents.aes_128_ecb_decrypt("YELLOW SUBMARINE".as_bytes().to_vec())
 }

@@ -3,6 +3,7 @@ extern crate openssl;
 
 use std::fmt;
 use std::ops::BitXor;
+use std::collections::HashMap;
 use self::openssl::crypto::symm::{Crypter, encrypt};
 use self::openssl::crypto::symm::Type::AES_128_ECB;
 use self::openssl::crypto::symm::Mode::Decrypt;
@@ -239,10 +240,10 @@ impl CryptoData {
         keysize
     }
 
-    pub fn aes_128_ecb_decrypt(&self, key: &str) -> CryptoData {
+    pub fn aes_128_ecb_decrypt(&self, key: Vec<u8>) -> CryptoData {
 
         let decrypter: Crypter = Crypter::new(AES_128_ECB);
-        decrypter.init(Decrypt, key.as_bytes(), vec![0, 16]);
+        decrypter.init(Decrypt, &key, vec![0, 16]);
         decrypter.pad(false);
         let decrypted: Vec<u8> = decrypter.update(&self.to_vec());
 
@@ -250,8 +251,7 @@ impl CryptoData {
          * There seems to be a bug in the decrypt method in the library that returns empty vectors
          * more info: https://github.com/sfackler/rust-openssl/issues/40
          *
-          let key_bytes = key.as_bytes();
-          let decrypted_vec: Vec<u8> = decrypt(AES_128_ECB, &key_bytes, vec![0, 16], &(self.to_vec()));
+          let decrypted_vec: Vec<u8> = decrypt(AES_128_ECB, &key, vec![0, 16], &(self.to_vec()));
           CryptoData::new_from_vec(decrypted_vec)
         */
 
@@ -259,9 +259,8 @@ impl CryptoData {
 
     }
 
-    pub fn aes_128_ecb_encrypt(&self, key: &str) -> CryptoData {
-        let key_bytes = key.as_bytes();
-        let encrypted_vec: Vec<u8> = encrypt(AES_128_ECB, &key_bytes, vec![0, 16], &(self.to_vec()));
+    pub fn aes_128_ecb_encrypt(&self, key: Vec<u8>) -> CryptoData {
+        let encrypted_vec: Vec<u8> = encrypt(AES_128_ECB, &key, vec![0, 16], &(self.to_vec()));
         CryptoData::new_from_vec(encrypted_vec)
     }
 
@@ -278,31 +277,29 @@ impl CryptoData {
         }
     }
 
-    pub fn encrypt_aes_128_cbc(&self, key: &str, iv: CryptoData) -> CryptoData {
-
+    pub fn encrypt_aes_128_cbc(&self, key: Vec<u8>, iv: CryptoData) -> CryptoData {
         let (_, cypher_text): (CryptoData, CryptoData) = self.to_vec()
             .chunks(16)
             .fold((iv, CryptoData::new()), | acc, block | {
                 let ( crypto_vec, result ) = acc;
                 let crypto_block = CryptoData::new_from_vec(block.to_vec());
                 let xored_block = crypto_block.xor(crypto_vec);
-                let encrypted_block = xored_block.aes_128_ecb_encrypt(key);
+                let encrypted_block = xored_block.aes_128_ecb_encrypt(key.clone());
 
                 (encrypted_block.clone(), result.concat(encrypted_block.strip_padding()))
             });
 
         cypher_text
-
     }
 
-    pub fn decrypt_aes_128_cbc(&self, key: &str, iv: CryptoData) -> CryptoData {
+    pub fn decrypt_aes_128_cbc(&self, key: Vec<u8>, iv: CryptoData) -> CryptoData {
 
         let (_, plain_text): (CryptoData, CryptoData) = self.to_vec()
             .chunks(16)
             .fold((iv, CryptoData::new()), | acc, block | {
                 let ( crypto_vec, result ) = acc;
                 let encrypted_block = CryptoData::new_from_vec(block.to_vec());
-                let crypto_block = encrypted_block.aes_128_ecb_decrypt(key);
+                let crypto_block = encrypted_block.aes_128_ecb_decrypt(key.clone());
                 let decrypted_block = crypto_block.xor(crypto_vec);
 
                 (encrypted_block.clone(), result.concat(decrypted_block.strip_padding()))
@@ -310,5 +307,35 @@ impl CryptoData {
 
         plain_text
 
+    }
+
+    pub fn is_aes_128_ecb(&self) -> bool {
+
+        let cypher = self.to_vec();
+        let mut cypher_map: HashMap<&[u8], u8> = HashMap::new();
+
+        for chunk in cypher.chunks(16) {
+            if !cypher_map.contains_key(chunk) {
+                cypher_map.insert(chunk, 0);
+            } else {
+                match cypher_map.get_mut(chunk) {
+                    Some(count) => { *count += 1; },
+                    None => {}
+                }
+
+                // Option 2
+                //let current_val = cypher_map.remove(chunk).unwrap();
+                //cypher_map.insert(chunk, current_val + 1);
+
+                // Option 3
+                // if let Some(count) = cypher_map.get_mut(chunk) {
+                //     *count += 1;
+                // }
+            }
+        }
+
+        let score = cypher_map.values().fold(0, |acc, &val| acc + val );
+
+        score > 0
     }
 }
