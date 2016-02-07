@@ -155,6 +155,19 @@ impl CryptoData {
         CryptoData::new_from_vec(result)
     }
 
+    pub fn padding(&self, length: u8) -> CryptoData {
+        let mut input: Vec<u8> = self.to_vec();
+        if length < input.len() as u8 {
+            self.clone()
+        } else {
+            let padding = length - input.len() as u8;
+            for _ in 0..padding {
+                input.push(padding);
+            }
+            CryptoData::new_from_vec(input)
+        }
+    }
+
     pub fn strip_padding(&self) -> CryptoData {
         let mut no_pad = self
             .to_vec();
@@ -169,29 +182,6 @@ impl CryptoData {
             .fold(0, | score, &data_char | {
                 score + get_char_score(data_char as char)
             })
-    }
-
-    pub fn decrypt_single_xor(&self) -> (i32, CryptoData, CryptoData) {
-
-        let mut best_xored: CryptoData = CryptoData::new();
-        let mut best_score: i32 = 0;
-        let mut best_key: CryptoData = CryptoData::new();
-
-        for i in 0..255 {
-            let xor_key = vec![i];
-            let current_key = CryptoData::new_from_vec(xor_key);
-            let current_xored = self.xor(current_key.clone());
-            let current_score = current_xored.score();
-
-            if current_score > best_score {
-                best_xored = current_xored;
-                best_score = current_score;
-                best_key = current_key;
-            }
-        }
-
-        (best_score, best_key, best_xored)
-
     }
 
     pub fn hamming_distance(&self, input: CryptoData) -> u16 {
@@ -240,6 +230,37 @@ impl CryptoData {
         keysize
     }
 
+    pub fn decrypt_single_xor(&self) -> (i32, CryptoData, CryptoData) {
+
+        let mut best_xored: CryptoData = CryptoData::new();
+        let mut best_score: i32 = 0;
+        let mut best_key: CryptoData = CryptoData::new();
+
+        for i in 0..255 {
+            let xor_key = vec![i];
+            let current_key = CryptoData::new_from_vec(xor_key);
+            let current_xored = self.xor(current_key.clone());
+            let current_score = current_xored.score();
+
+            if current_score > best_score {
+                best_xored = current_xored;
+                best_score = current_score;
+                best_key = current_key;
+            }
+        }
+
+        (best_score, best_key, best_xored)
+
+    }
+
+    pub fn ecb_decrypt_byte(&self) -> CryptoData {
+
+        println!("keysize: {:?}", self.xor_keysize());
+
+        CryptoData::new()
+
+    }
+
     pub fn aes_128_ecb_decrypt(&self, key: Vec<u8>) -> CryptoData {
 
         let decrypter: Crypter = Crypter::new(AES_128_ECB);
@@ -259,54 +280,9 @@ impl CryptoData {
 
     }
 
-    pub fn aes_128_ecb_encrypt(&self, key: Vec<u8>) -> CryptoData {
-        let encrypted_vec: Vec<u8> = encrypt(AES_128_ECB, &key, vec![0, 16], &(self.to_vec()));
+    pub fn aes_128_ecb_encrypt(&self, key: &Vec<u8>) -> CryptoData {
+        let encrypted_vec: Vec<u8> = encrypt(AES_128_ECB, key, vec![0, 16], &(self.to_vec()));
         CryptoData::new_from_vec(encrypted_vec)
-    }
-
-    pub fn padding(&self, length: u8) -> CryptoData {
-        let mut input: Vec<u8> = self.to_vec();
-        if length < input.len() as u8 {
-            self.clone()
-        } else {
-            let padding = length - input.len() as u8;
-            for _ in 0..padding {
-                input.push(padding);
-            }
-            CryptoData::new_from_vec(input)
-        }
-    }
-
-    pub fn encrypt_aes_128_cbc(&self, key: Vec<u8>, iv: CryptoData) -> CryptoData {
-        let (_, cypher_text): (CryptoData, CryptoData) = self.to_vec()
-            .chunks(16)
-            .fold((iv, CryptoData::new()), | acc, block | {
-                let ( crypto_vec, result ) = acc;
-                let crypto_block = CryptoData::new_from_vec(block.to_vec());
-                let xored_block = crypto_block.xor(crypto_vec);
-                let encrypted_block = xored_block.aes_128_ecb_encrypt(key.clone());
-
-                (encrypted_block.clone(), result.concat(encrypted_block.strip_padding()))
-            });
-
-        cypher_text
-    }
-
-    pub fn decrypt_aes_128_cbc(&self, key: Vec<u8>, iv: CryptoData) -> CryptoData {
-
-        let (_, plain_text): (CryptoData, CryptoData) = self.to_vec()
-            .chunks(16)
-            .fold((iv, CryptoData::new()), | acc, block | {
-                let ( crypto_vec, result ) = acc;
-                let encrypted_block = CryptoData::new_from_vec(block.to_vec());
-                let crypto_block = encrypted_block.aes_128_ecb_decrypt(key.clone());
-                let decrypted_block = crypto_block.xor(crypto_vec);
-
-                (encrypted_block.clone(), result.concat(decrypted_block.strip_padding()))
-            });
-
-        plain_text
-
     }
 
     pub fn is_aes_128_ecb(&self) -> bool {
@@ -337,5 +313,37 @@ impl CryptoData {
         let score = cypher_map.values().fold(0, |acc, &val| acc + val );
 
         score > 0
+    }
+
+    pub fn encrypt_aes_128_cbc(&self, key: Vec<u8>, iv: CryptoData) -> CryptoData {
+        let (_, cypher_text): (CryptoData, CryptoData) = self.to_vec()
+            .chunks(16)
+            .fold((iv, CryptoData::new()), | acc, block | {
+                let ( crypto_vec, result ) = acc;
+                let crypto_block = CryptoData::new_from_vec(block.to_vec());
+                let xored_block = crypto_block.xor(crypto_vec);
+                let encrypted_block = xored_block.aes_128_ecb_encrypt(&key);
+
+                (encrypted_block.clone(), result.concat(encrypted_block.strip_padding()))
+            });
+
+        cypher_text
+    }
+
+    pub fn decrypt_aes_128_cbc(&self, key: Vec<u8>, iv: CryptoData) -> CryptoData {
+
+        let (_, plain_text): (CryptoData, CryptoData) = self.to_vec()
+            .chunks(16)
+            .fold((iv, CryptoData::new()), | acc, block | {
+                let ( crypto_vec, result ) = acc;
+                let encrypted_block = CryptoData::new_from_vec(block.to_vec());
+                let crypto_block = encrypted_block.aes_128_ecb_decrypt(key.clone());
+                let decrypted_block = crypto_block.xor(crypto_vec);
+
+                (encrypted_block.clone(), result.concat(decrypted_block.strip_padding()))
+            });
+
+        plain_text
+
     }
 }

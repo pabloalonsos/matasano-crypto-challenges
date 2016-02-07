@@ -10,7 +10,7 @@ fn random_encrypt(crypto_input: CryptoData, key: Vec<u8>) -> CryptoData {
     let mut rnd = thread_rng();
     let random = rnd.gen_range(0, 2);
     match rnd.gen_range(0, 2) {
-        0 => crypto_input.aes_128_ecb_encrypt(key),
+        0 => crypto_input.aes_128_ecb_encrypt(&key),
         1 => crypto_input.encrypt_aes_128_cbc(key, CryptoData::new_from_vec(rand_bytes(16))),
         _ => crypto_input
     }
